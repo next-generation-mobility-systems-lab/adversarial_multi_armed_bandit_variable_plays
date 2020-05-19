@@ -22,16 +22,16 @@ def draw(weights):
 # it grows from zero to one.
 def distr(weights, gamma=0.0):
     theSum = float(sum(weights))
-    return tuple((1.0 - gamma) * (w / theSum) + (gamma / len(weights)) for w in weights)
+    return [(1.0 - gamma) * (w / theSum) + (gamma / len(weights)) for w in weights]
 
 
 # distr_multiPlays: [float] -> (float)
 # Normalize a list of floats to a probability distribution.  Gamma is an
 # egalitarianism factor, which tempers the distribtuion toward being uniform as
 # it grows from zero to one.
-def distr_multiPlays(weights,gamma=0.0,numPlays)
+def distr_multiPlays(weights,numPlays,gamma=0.0):
     theSum = float(sum(weights))
-    return tuple( numPlays * ((1.0 - gamma) * (w / theSum) + (gamma / len(weights))) for w in weights)
+    return [numPlays * ((1.0 - gamma) * (w / theSum) + (gamma / len(weights))) for w in weights]
 
 
 

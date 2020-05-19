@@ -23,6 +23,7 @@ try:
 except ImportError:
     from with_proba import with_proba
 
+import random
 
 # --- Utility functions
 
@@ -71,11 +72,68 @@ def DepRound(weights_p, k=1):
     p = np.array(weights_p)
     K = len(p)
     # Checks
-    assert k < K, "Error: k = {} should be < K = {}.".format(k, K)  # DEBUG
+    assert k < K, "Error (DepRound): k = {} should be < K = {}.".format(k, K)  # DEBUG
+    # assert abs(sum(p) - k) < 1e-3, "Error (DepRound): sum of the selection probability should equal numPlays."
+
+    # if not abs(sum(p) - k) < 1e-3:
+    #     p = k * p / np.sum(p)
+
     if not np.isclose(np.sum(p), 1):
         p = p / np.sum(p)
     assert np.all(0 <= p) and np.all(p <= 1), "Error: the weights (p_1, ..., p_K) should all be 0 <= p_i <= 1 ...".format(p)  # DEBUG
     assert np.isclose(np.sum(p), 1), "Error: the sum of weights p_1 + ... + p_K should be = 1 (= {}).".format(np.sum(p))  # DEBUG
+    # # Main loop
+    # possible_ij = [a for a in range(K) if 0 < p[a] < 1]
+    # while possible_ij:
+    #     # Choose distinct i, j with 0 < p_i, p_j < 1
+    #     if len(possible_ij) == 1:
+    #         i = np.random.choice(possible_ij, size=1)
+    #         j = i
+    #     else:
+    #         i, j = np.random.choice(possible_ij, size=2, replace=False)
+    #     pi, pj = p[i], p[j]
+    #     assert 0 < pi < 1, "Error: pi = {} (with i = {}) is not 0 < pi < 1.".format(pi, i)  # DEBUG
+    #     assert 0 < pj < 1, "Error: pj = {} (with j = {}) is not 0 < pj < 1.".format(pj, i)  # DEBUG
+    #     assert i != j, "Error: i = {} is different than with j = {}.".format(i, j)  # DEBUG
+
+    #     # Set alpha, beta
+    #     alpha, beta = min(1 - pi, pj), min(pi, 1 - pj)
+    #     proba = alpha / (alpha + beta)
+    #     if with_proba(proba):  # with probability = proba = alpha/(alpha+beta)
+    #         pi, pj = pi + alpha, pj - alpha
+    #     else:            # with probability = 1 - proba = beta/(alpha+beta)
+    #         pi, pj = pi - beta, pj + beta
+
+    #     # Store
+    #     p[i], p[j] = pi, pj
+    #     # And update
+    #     possible_ij = [a for a in range(K) if 0 < p[a] < 1]
+    #     if len([a for a in range(K) if np.isclose(p[a], 0)]) == K - k:
+    #         break
+    # # Final step
+    # subset = [a for a in range(K) if np.isclose(p[a], 1)]
+    # if len(subset) < k:
+    #     subset = [a for a in range(K) if not np.isclose(p[a], 0)]
+    # assert len(subset) == k, "Error: DepRound({}, {}) is supposed to return a set of size {}, but {} has size {}...".format(weights_p, k, k, subset, len(subset))  # DEBUG
+    
+    data = np.array([i for i in range(K)])
+    subset = np.random.choice(data, size = k,replace=False, p = p)
+    # sunset = subset.tolist()
+
+    return subset.tolist()
+
+
+def DepRound1(weights_p, k=1):
+    
+    p = np.array(weights_p)
+    K = len(p)
+    # Checks
+    assert k < K, "Error (DepRound): k = {} should be < K = {}.".format(k, K)  # DEBUG
+    assert abs(sum(p) - k) < 1e-3, "Error (DepRound): sum of the selection probability should equal numPlays."
+    # if not np.isclose(np.sum(p), 1):
+        # p = p / np.sum(p)
+    # assert np.all(0 <= p) and np.all(p <= 1), "Error: the weights (p_1, ..., p_K) should all be 0 <= p_i <= 1 ...".format(p)  # DEBUG
+    assert np.isclose(np.sum(p), k), "Error: the sum of weights p_1 + ... + p_K should be = 1 (= {}).".format(np.sum(p))  # DEBUG
     # Main loop
     possible_ij = [a for a in range(K) if 0 < p[a] < 1]
     while possible_ij:
@@ -109,4 +167,9 @@ def DepRound(weights_p, k=1):
     if len(subset) < k:
         subset = [a for a in range(K) if not np.isclose(p[a], 0)]
     assert len(subset) == k, "Error: DepRound({}, {}) is supposed to return a set of size {}, but {} has size {}...".format(weights_p, k, k, subset, len(subset))  # DEBUG
+    
+    # data = np.array([i for i in range(K)])
+    # subset = np.random.choice(data, size = k,replace=False, p = p)
+    # sunset = subset.tolist()
+
     return subset
