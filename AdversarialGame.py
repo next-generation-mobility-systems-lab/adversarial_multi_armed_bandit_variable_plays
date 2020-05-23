@@ -1,11 +1,14 @@
-from probability import distr_multiPlays, distr, draw
-from DepRound import DepRound, DepRound1
 import math
 import random
-from scipy.optimize import fsolve
 import numpy as np
 import yaml
 import os
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+from probability import distr_multiPlays, distr, draw
+from utility_plot import regret_plot 
+from utilities import getAlpha, find_indices, reward, updateState_p,updateState_e, DepRound, randomInt
 
 class summary:
 	choice_p = []
@@ -13,6 +16,27 @@ class summary:
 	rewardVector_p = []
 	rewardVector_e = []
 	numPlays = []
+	
+	cumulativeReward_p = 0
+	cumulativeRewardVec_p = []
+	cumulativeReward_e = 0
+	cumulativeRewardVec_e = []
+
+	weights_pursuer = []
+	weights_evader = []
+	dist_evader = []
+
+	bestActionCumulativeReward_p = 0
+	bestActionCumulativeReward_e = 0
+
+	weakRegret_p = []
+	weakRegret_e = []
+
+	regretBound_p = []
+	regretBound_e = []
+	
+	bestAction_p = []
+	bestAction_e = []
 
 class State_p:
 	gamma_p = []
@@ -20,69 +44,6 @@ class State_p:
 
 class State_e:
 	gamma_e = []
-
-
-
-def getAlpha(temp, w_sorted):
-	# getAlpha calculates the alpha value for the sorted weight vector.
-	sum_weight = sum(w_sorted)
-
-	for i in range(len(w_sorted)):
-		alpha = (temp * sum_weight) / (1 - i * temp)
-		curr = w_sorted[i]
-
-		if alpha > curr:
-			alpha_exp = alpha
-			return alpha_exp
-
-		sum_weight = [s - curr for s in sum_weight]
-
-	raise Exception('alpha not found')
-
-
-def find_indices(lst, condition):
-	# Function that returns the indices satisfying the condition function
-	return [i for i, elem in enumerate(lst) if condition(elem)]
-
-def reward(choice_p, choice_e):
-	common_choice = list(set(choice_p).intersection([choice_e]))
-	reward_e = 0.0
-	reward_p = [0.0] * len(choice_p)
-
-	if not common_choice:
-		reward_e = 1.0 
-	else:
-		for i in common_choice:
-			indx = choice_p.index(i)
-			reward_p[indx] = 1.0
-
-	return reward_p, reward_e, common_choice
-
-
-def updateState_p(State_p):
-	numActions = len(State_p.scaledReward_p)
-	numPlays = len(State_p.choice_p)
-	State_p.estimateReward = [0.0] * numActions
-
-	for i in State_p.choice_p:
-		State_p.estimateReward[i] = 1.0 * State_p.scaledReward_p[i] / State_p.probDist_p[i]
-
-	w_temp_p = State_p.weights_pursuer
-
-	for i in range(numActions):
-		State_p.weights_pursuer[i] *= math.exp(numPlays * State_p.estimateReward[i] * State_p.gamma_p / numActions) # important that we use estimated reward here!
-
-	for s in State_p.S_0:
-		State_p.weights_pursuer[s] = w_temp_p[s]
-
-	# weights_pursuer, estimateReward
-
-def updateState_e(State_e):
-	numActions = len(State_e.scaledReward_e)
-	State_e.estimatedReward = [0.0] * numActions
-	State_e.estimatedReward[State_e.choice_e] = 1.0 * State_e.scaledReward_e[State_e.choice_e] / State_e.probDist_e[State_e.choice_e]
-	State_e.weights_evader[State_e.choice_e] *= math.exp(State_e.estimatedReward[State_e.choice_e] * State_e.gamma_e / numActions) # important that we use estimated reward here!
-
 
 
 def advGame(config,numPlays):
@@ -101,7 +62,8 @@ def advGame(config,numPlays):
 		State_p.gamma_p = config['gamma_p']
 
 	else:
-		State_p.gamma_p =  min([1, math.sqrt(numActions * math.log(numActions/numPlays) / ((math.e - 1) * numPlays * numRounds ) ) ])
+		State_p.gamma_p =  min([1, math.sqrt(numActions * numActions * numPlays_LB *math.log(numActions/numPlays_UB)\
+			 / (( (math.e - 2) * numPlays_UB + numPlays_LB)* numPlays_UB * numRounds ) ) ])
 
 	if config['custom_gamma_evader']:
 		State_e.gamma_e =  min([1, math.sqrt(numActions * math.log(numActions) / ((math.e - 1) *  numRounds ) ) ])
@@ -112,8 +74,9 @@ def advGame(config,numPlays):
 	# entering the main loop
 	while True:
 		theSum_pursuer = sum(State_p.weights_pursuer)
-		State_p.weights_pursuer = [w / theSum_pursuer for w in State_p.weights_pursuer] # normalize the weight vector of the pursuer
 		theSum_evader = sum(State_e.weights_evader)
+		State_p.weights_pursuer = [w / theSum_pursuer for w in State_p.weights_pursuer] # normalize the weight vector of the pursuer
+		State_e.weights_evader = [w / theSum_evader for w in State_e.weights_evader] # normalize the weight vector of the pursuer
 
 		temp = (1.0 / numPlays - State_p.gamma_p / numActions) * float( 1.0 / (1.0 - State_p.gamma_p) )
 		w_temp_p = State_p.weights_pursuer
@@ -130,7 +93,7 @@ def advGame(config,numPlays):
 
 
 		else:
-			S_0 = []
+			State_p.S_0 = []
 
 
 		State_p.probDist_p = distr_multiPlays(w_temp_p, numPlays, gamma = State_p.gamma_p)
@@ -163,7 +126,8 @@ def advGame(config,numPlays):
 
 		State_p.cumulativeReward_p = sum(State_p.reward_p)
 		State_e.cumulativeReward_e = State_e.reward_e
-
+		assert State_p.cumulativeReward_p + State_e.cumulativeReward_e == 1, "Error, should be constant sum game!"
+        
 		yield State_p, State_e
 		t = t + 1
 
@@ -206,26 +170,15 @@ if __name__ == '__main__':
 
 
 					with open(config_search['plot_dir'] + 'config.yaml', 'w') as f:
-						yaml.dump(config_search,f)
-
-					summary.cumulativeReward_p = 0
-					summary.cumulativeRewardVec_p = []
-					summary.cumulativeReward_e = 0
-					summary.cumulativeRewardVec_e = []
-
-					summary.bestActionCumulativeReward_p = 0
-					summary.bestActionCumulativeReward_e = 0
-
-					summary.weakRegret_p = []
-					summary.weakRegret_e = []
-        			# weakRegret_p = 0
-        			# weakRegret_e = 0
+						yaml.dump(config_search,f)                 
 
 					t = 0
 
 					numPlays_LB = nPL_val
 					numPlays_UB = nPU_val
-					summary.numPlays = [random.randint(numPlays_LB, numPlays_UB) for _ in range(nR_val)] 		# list of number of plays that is uniformly distributed for the pursuer
+					numPlays_std = config_search['numPlays_std']
+					# summary.numPlays = [random.randint(numPlays_LB, numPlays_UB) for _ in range(nR_val)] 		# list of number of plays that is uniformly distributed for the pursuer
+					summary.numPlays = randomInt(numPlays_LB, numPlays_UB, numPlays_std, nR_val)
 
 					try:
 						for (State_p, State_e) in advGame(config_search, summary.numPlays[t]):
@@ -234,37 +187,53 @@ if __name__ == '__main__':
 							summary.cumulativeReward_e += State_e.cumulativeReward_e
 							summary.cumulativeRewardVec_e.extend([summary.cumulativeReward_e])
 
+							summary.weights_pursuer.append(State_p.weights_pursuer)
+							summary.weights_evader.append(State_e.weights_evader)
+							summary.dist_evader.append(distr(State_e.weights_evader))
+
 							summary.choice_p.append(State_p.choice_p)
 							summary.choice_e.append([State_e.choice_e])
 							summary.rewardVector_p.append(State_p.rewardFull_p)
 							summary.rewardVector_e.append(State_e.rewardFull_e)
+
                             
-							print("pursuer reward:(%s)\tevader reward(%s)\t" % (', '.join(["%.3f" % r for r in State_p.rewardFull_p]),','.join(["%.3f" % r for r in State_e.rewardFull_e])))
+							print("pursuer weights:(%s)\tevader weights(%s)\t" % \
+								(', '.join(["%.3f" % r for r in distr_multiPlays(State_p.weights_pursuer, summary.numPlays[t])]),','.join(["%.3f" % r for r in distr(State_e.weights_evader)])))
 
 							t += 1
 							if t>= nR_val:
 								break
 
-						summary.bestAction_p = []
-						summary.bestAction_e = []
+						bestActionSet_p = sorted(range(config_search['numActions']), key=lambda action: sum([summary.rewardVector_p[t][action] \
+							for t in range(nR_val)]), reverse=True)[:config_search['numPlays_UB']]
+						bestActionSet_e = max(range(config_search['numActions']), key=lambda action: sum([summary.rewardVector_e[t][action] \
+							for t in range(nR_val)]))
 
-						bestActionSet_p = sorted(range(config_search['numActions']), key=lambda action: sum([summary.rewardVector_p[t][action] for t in range(nR_val)]), reverse=True)[:config_search['numPlays_UB']]
-						bestActionSet_e = max(range(config_search['numActions']), key=lambda action: sum([summary.rewardVector_e[t][action] for t in range(nR_val)]))
+						log_p = open(config_search['summary_dir'] + 'log_pursuer.txt','w+')
+						log_e = open(config_search['summary_dir'] + 'log_evader.txt','w+')
 
 						for s in range(nR_val):
-							summary.bestAction_p.append(bestActionSet_p[summary.numPlays[s]-1])
+							summary.bestAction_p.append(bestActionSet_p[:summary.numPlays[s]])
 							summary.bestActionCumulativeReward_p += sum([summary.rewardVector_p[s][i] for i in bestActionSet_p[:summary.numPlays[s]]])
 							summary.bestActionCumulativeReward_e += summary.rewardVector_e[s][bestActionSet_e]
-        					
-							summary.regretBound_p = (1 + (math.e - 2)* config_search['numPlays_UB'] / config_search['numPlays_LB'])* State_p.gamma_p * summary.bestActionCumulativeReward_p + (config_search['numActions'] * math.log(config_search['numActions']/config_search['numPlays_UB'])) / State_p.gamma_p
-							summary.regretBound_e = (math.e - 1) * State_e.gamma_e * summary.bestActionCumulativeReward_e + (config_search['numActions'] * math.log(config_search['numActions'])) / State_e.gamma_e
+							
+							summary.regretBound_p.append((1 + (math.e - 2)* config_search['numPlays_UB'] / config_search['numPlays_LB'])* State_p.gamma_p \
+								* summary.bestActionCumulativeReward_p + (config_search['numActions'] * math.log(config_search['numActions']/config_search['numPlays_UB'])) / State_p.gamma_p)
+							
+							summary.regretBound_e.append((math.e - 1) * State_e.gamma_e * summary.bestActionCumulativeReward_e \
+								+ (config_search['numActions'] * math.log(config_search['numActions'])) / State_e.gamma_e) 
 
 							summary.weakRegret_p.extend([summary.bestActionCumulativeReward_p - summary.cumulativeRewardVec_p[s]])
 							summary.weakRegret_e.extend([summary.bestActionCumulativeReward_e - summary.cumulativeRewardVec_e[s]])
 
 
+							log_p.write("t:%d\tnumPlays:%d\tregret:%d\treward:%d\tweights:(%s)\r\n" % (s+1, summary.numPlays[s],summary.weakRegret_p[s],summary.cumulativeRewardVec_p[s],\
+								', '.join(["%.3f" % weight for weight in distr_multiPlays(summary.weights_pursuer[s], summary.numPlays[s])])))
 
+							log_e.write("t:%d\tregret:%d\treward:%d\tweights:(%s)\r\n" % (s+1, summary.weakRegret_e[s], summary.cumulativeRewardVec_e[s],\
+								', '.join(["%.3f" % weight for weight in distr(summary.weights_evader[s])])))
 
+						regret_plot(summary, config_search) # ploting
 
 					except KeyboardInterrupt:
 						pass

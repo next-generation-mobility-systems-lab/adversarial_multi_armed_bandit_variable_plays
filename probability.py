@@ -29,7 +29,7 @@ def distr(weights, gamma=0.0):
 # Normalize a list of floats to a probability distribution.  Gamma is an
 # egalitarianism factor, which tempers the distribtuion toward being uniform as
 # it grows from zero to one.
-def distr_multiPlays(weights,numPlays,gamma=0.0):
+def distr_multiPlays(weights, numPlays, gamma=0.0):
     theSum = float(sum(weights))
     return [numPlays * ((1.0 - gamma) * (w / theSum) + (gamma / len(weights))) for w in weights]
 

@@ -1,14 +1,15 @@
-custom_gamma_pursuer: True
-gamma_p: 0.7
+custom_gamma_pursuer: False
+gamma_p: 0.5
 
-custom_gamma_evader: True
-gamma_e: 0.7
+custom_gamma_evader: False
+gamma_e: 0.07
 
 
-numActionsVec: [4]
+numActionsVec: [10]
 numRoundsVec: [100000]
-numPlays_LBVec: [2]
-numPlays_UBVec: [2]
+numPlays_LBVec: [1]
+numPlays_UBVec: [3]
+numPlays_std: [0.7]
 
 rewardMax: 1.0
 rewardMin: 0.0
