@@ -63,7 +63,7 @@ def simpleTest():
 
       weakRegret = (bestActionCumulativeReward - cumulativeReward)
       averageRegret = weakRegret / (t+1)
-      weights_vec.append(distr_multiPlays(weights,numPlays[t]))
+      weights_vec.append(distr_multiPlays(weights,1))
 
 
       # regretBound = (math.e - 1) * gamma * bestActionCumulativeReward + (numActions * math.log(numActions)) / gamma
