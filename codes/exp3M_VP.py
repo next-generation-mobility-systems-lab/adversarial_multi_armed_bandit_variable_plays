@@ -1,12 +1,7 @@
 from probability import distr_multiPlays
-from DepRound import DepRound, DepRound1
 import math
 import random
-# from sympy.solvers import solve
-# from sympy import Symbol
-from scipy.optimize import fsolve
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from exp3M import exp3m
@@ -34,17 +29,17 @@ def simpleTest():
    biases = [1.5 / k for k in range(2,2 + numActions)]
    rewardVector = [[1 if random.random() < bias else 0 for bias in biases] for _ in range(numRounds)]
 
-   rewards = lambda t, choice: [rewardVector[t][i] for i in choice] 
+   rewards = lambda t, choice: [rewardVector[t][i] for i in choice]
    # if (numPlays > 1):
-   		# rewards = lambda t, choice: [rewardVector[t][i] for i in choice] 
+   		# rewards = lambda t, choice: [rewardVector[t][i] for i in choice]
 
    # else:
    # 		rewards = lambda t, choice: rewardVector[t][choice]
 
    bestActionSet = sorted(range(numActions), key=lambda action: sum([rewardVector[t][action] for t in range(numRounds)]), reverse=True)[:numPlays_UB]
-   
 
-   
+
+
    gamma = min([1, math.sqrt(numActions * numActions * numPlays_LB *math.log(numActions/numPlays_UB)\
 			 / (( (math.e - 2) * numPlays_UB + numPlays_LB)* numPlays_UB * numRounds ) ) ])
    gamma = 0.05
@@ -64,7 +59,7 @@ def simpleTest():
       cumulativeReward += reward
       average_reward.extend([cumulativeReward / (t+1)])
       bestActionCumulativeReward += sum([rewardVector[t][i] for i in bestActionSet[:numPlays[t]]])
-      bestUpperBoundEstimate = (math.e - 1) * gamma * bestActionCumulativeReward
+      # bestUpperBoundEstimate = (math.e - 1) * gamma * bestActionCumulativeReward
 
       weakRegret = (bestActionCumulativeReward - cumulativeReward)
       averageRegret = weakRegret / (t+1)
@@ -80,7 +75,7 @@ def simpleTest():
 
 
       factor.append(weakRegret/regretBound)
-      
+
       weakRegretVec.append(weakRegret)
       linear_regret.append(t+1)
       regret_Bound_vec.append(regretBound)
@@ -96,25 +91,25 @@ def simpleTest():
       if t >= numRounds:
          break
 
-   print(cumulativeReward)	
-   
+   print(cumulativeReward)
+
    # plotting
    fig1, (ax1,ax2) = plt.subplots(nrows=2, ncols=1)
    plt.ylabel('Cumulative (weak) Regret')
    ax1.plot(range(numRounds), weakRegretVec,label='weak regret')
    ax1.plot(range(numRounds), linear_regret,label='linear regret')
-   ax1.plot(range(numRounds), regret_Bound_vec, label = 'expected upper bound')   
+   ax1.plot(range(numRounds), regret_Bound_vec, label = 'expected upper bound')
    ax1.legend()
-   
+
    np_weights_vec = np.array(weights_vec)
    transpose = np_weights_vec.T
    weights_vec = transpose.tolist()
 
    for w in weights_vec:
        ax2.plot(range(numRounds), w)
-       
+
    plt.ylabel('Weight')
-   
+
 
    fig2, (ax3,ax4) = plt.subplots(nrows=2, ncols=1)
    ax3.plot(range(numRounds), factor, label = 'weak regret/upper bound')
@@ -125,14 +120,14 @@ def simpleTest():
 
 
 
-   
+
 
 
 
 
 if __name__ == "__main__":
    simpleTest()
-		
+
 
 
 
