@@ -1,19 +1,19 @@
-custom_gamma_pursuer: False
-gamma_p: 0.5
+custom_gamma_pursuer: True
+gamma_p: 0.25
 
-custom_gamma_evader: False
-gamma_e: 0.07
+custom_gamma_evader: True
+gamma_e: 0.1
 
 
 numActionsVec: [10]
 numRoundsVec: [100000]
 numPlays_LBVec: [1]
 numPlays_UBVec: [3]
-numPlays_std: [0.7]
+numPlays_std: [0.5]
 
 rewardMax: 1.0
 rewardMin: 0.0
 
-results_dir: '../results/MABVP_05_14'
-summaries_dir: '../results/summaries/MABVP_05_14/'
-plots_dir: '../results/plots/MABVP_05_14/'
+results_dir: '../results/MABVP_07_28'
+summaries_dir: '../results/summaries/MABVP_07_28/'
+plots_dir: '../results/plots/MABVP_07_28/'

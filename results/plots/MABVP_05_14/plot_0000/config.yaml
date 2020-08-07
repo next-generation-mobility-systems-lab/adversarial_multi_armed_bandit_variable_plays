@@ -1,7 +1,7 @@
-custom_gamma_evader: false
-custom_gamma_pursuer: false
-gamma_e: 0.07
-gamma_p: 0.5
+custom_gamma_evader: true
+custom_gamma_pursuer: true
+gamma_e: 0.1
+gamma_p: 0.2
 numActions: 10
 numActionsVec:
 - 10
@@ -13,9 +13,9 @@ numPlays_UBVec:
 - 3
 numPlays_std:
 - 0.7
-numRounds: 100000
+numRounds: 200000
 numRoundsVec:
-- 100000
+- 200000
 plot_dir: ../results/plots/MABVP_05_14/plot_0000/
 plots_dir: ../results/plots/MABVP_05_14/
 results_dir: ../results/MABVP_05_14
