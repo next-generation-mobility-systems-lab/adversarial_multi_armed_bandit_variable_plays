@@ -21,7 +21,7 @@ def simpleTest():
     numRounds = 20000
     numPlays_LB = 1
     numPlays_UB = 3
-    numPlays_std = 0.2
+    numPlays_std = 0.9
 
     numPlays = randomInt(numPlays_LB, numPlays_UB, numPlays_std, numRounds)
 
@@ -83,10 +83,13 @@ def simpleTest():
         averageRegret = weakRegret / (t + 1)
         weights_vec.append(distr_multiPlays(weights, 1))
 
-        # regretBound = (math.e - 1) * gamma * bestActionCumulativeReward + (numActions * math.log(numActions)) / gamma
-        # regretBound = 2.63 * math.sqrt(numActions * t * numPlays * math.log(numActions/numPlays) )
-
-        # regretBound = bestUpperBoundEstimate + (numActions * math.log(numActions / numPlays)) / gamma
+        # regretBound = (
+        #     2
+        #     * math.sqrt((1 + (math.e - 2) * numPlays_UB / numPlays_LB))
+        #     * math.sqrt(
+        #         numPlays_UB * numActions * math.log(numActions / numPlays_UB) * (t + 1)
+        #     )
+        # )
         regretBound = (
             (1 + (math.e - 2) * numPlays_UB / numPlays_LB)
             * gamma
