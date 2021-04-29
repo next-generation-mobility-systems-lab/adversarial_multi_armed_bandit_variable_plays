@@ -1,10 +1,10 @@
 # Importing the libraries
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
 import math
 import random
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from utilities import randomInt
 from exp3M import exp3m
@@ -100,5 +100,5 @@ plt.ylabel("Average Reward")
 plt.title("Average Rewards")
 plt.grid(True)
 plt.savefig(plot_dir + "\\compare.png")
-plt.show()
+_ = plt.show()
 
