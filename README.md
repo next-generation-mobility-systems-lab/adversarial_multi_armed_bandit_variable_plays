@@ -9,5 +9,5 @@ This code is for paper:
 
 <code>compare.py</code>: Compare Exp3.M-VP against Exp3, Exp3.M, UCB, and epsilon-greedy.
 
-</code>Exp3M_VP</code>: Runs Exp3M_VP algorithm with synthetic reward vectors.
+<code>Exp3M_VP</code>: Runs Exp3M_VP algorithm with synthetic reward vectors.
  
